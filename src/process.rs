@@ -29,8 +29,9 @@ use windows::{
             Threading::{
                 CreateProcessW, DeleteProcThreadAttributeList, GetExitCodeProcess, GetProcessId,
                 InitializeProcThreadAttributeList, TerminateProcess, UpdateProcThreadAttribute,
-                WaitForSingleObject, CREATE_UNICODE_ENVIRONMENT, EXTENDED_STARTUPINFO_PRESENT,
-                LPPROC_THREAD_ATTRIBUTE_LIST, PROCESS_INFORMATION, STARTUPINFOEXW,
+                WaitForSingleObject, CREATE_NEW_CONSOLE, DETACHED_PROCESS, CREATE_UNICODE_ENVIRONMENT, CREATE_NEW_PROCESS_GROUP,
+                EXTENDED_STARTUPINFO_PRESENT, LPPROC_THREAD_ATTRIBUTE_LIST, PROCESS_INFORMATION, STARTF_USESTDHANDLES,
+                STARTUPINFOEXW,
             },
             WindowsProgramming::INFINITE,
         },
@@ -218,6 +219,10 @@ const PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE: usize = 0x00020016;
 fn initializeStartupInfoAttachedToConPTY(hPC: &mut HPCON) -> win::Result<STARTUPINFOEXW> {
     let mut siEx = STARTUPINFOEXW::default();
     siEx.StartupInfo.cb = size_of::<STARTUPINFOEXW>() as u32;
+    siEx.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
+    siEx.StartupInfo.hStdError = HANDLE(0);
+    siEx.StartupInfo.hStdInput = HANDLE(0);
+    siEx.StartupInfo.hStdOutput = HANDLE(0);
 
     let mut size: usize = 0;
     let res = unsafe {
@@ -278,7 +283,7 @@ fn execProc(command: Command, startup_info: STARTUPINFOEXW) -> win::Result<PROCE
     };
 
     let appname = PCWSTR(null_mut());
-    let dwflags = EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT; // CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE
+    let dwflags = EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT;
 
     let mut proc_info = PROCESS_INFORMATION::default();
     unsafe {
