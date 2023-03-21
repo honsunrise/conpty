@@ -53,6 +53,9 @@ pub struct Process {
     _console: HPCON,
 }
 
+unsafe impl Send for Process {}
+unsafe impl Sync for Process {}
+
 impl Process {
     /// Spawn a given command.
     ///
